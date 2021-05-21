@@ -16,17 +16,17 @@
 using namespace std;
 using namespace Pistache;
 
-string stateful(){
+string stateful(string param){
     cout<<"intra";
-    ifstream in("stateful.txt");
+    ifstream in(param);
     string date, cdate;
     in>>date;
     cdate = date;
     return cdate;
     }
 
-void stateful2(string date){
-    ofstream out("stateful.txt");
+void stateful2(string date, string param){
+    ofstream out(param);
     out<<date;
 }
 
@@ -87,7 +87,7 @@ private:
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&CarEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&CarEndpoint::setSetting, this));
+        Routes::Post(router, "/settings/:settingName/:value?", Routes::bind(&CarEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&CarEndpoint::getSetting, this));
     }
 
@@ -163,7 +163,7 @@ private:
             if(name == "temperature"){
                 temperature.name = name;
                 temperature.value = value;
-                stateful2(value);
+                stateful2(value, "stateful.txt");
                 return 1;
             }
             return 0;
@@ -186,7 +186,7 @@ private:
         struct intSetting{
         
             std::string name;
-            string value = stateful();
+            string value = stateful("stateful.txt");
         }temperature;
     };
 
@@ -206,7 +206,6 @@ private:
 int main(int argc, char *argv[]) {
 
 
-    stateful();
     // This code is needed for gracefull shutdown of the server when no longer needed.
     sigset_t signals;
     if (sigemptyset(&signals) != 0
