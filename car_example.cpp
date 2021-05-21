@@ -13,6 +13,8 @@
 
 #include <signal.h>
 #include <string.h>
+
+
 using namespace std;
 using namespace Pistache;
 
@@ -166,16 +168,56 @@ private:
                 stateful2(value, "stateful.txt");
                 return 1;
             }
+            if (name == "oprire"){
+                //oprire.value = value;
+                std::string all_km_str = stateful("stateful_current.txt");
+                int all_km = stoi(all_km_str); 
+                int new_km = rand()%999+2;
+                //int new_km = stoi(oprire.value);
+                new_km = new_km + all_km;
+                std::string new_km_str = std::to_string(new_km);
+                stateful2(new_km_str,"stateful_current");
+                return 1;
+            }
+            if(name == "revision_done"){
+                string last_revision = stateful("stateful_current_km.txt");
+                stateful2(last_revision , "stateful_verified_km.txt");
+                return 1;
+            }
+            if(name == "senzor") {
+              distance.value = value;
+              stateful2(value, "stateful_senzor.txt");
+              return 1;
+            }
             return 0;
         }
 
         // Getter
         string get(std::string name){
             if (name == "temperature"){
+                temperature.value = stateful("stateful.txt");
                 return temperature.value;
             }
+            else if (name == "revision"){
+                std::string last_revision_str = stateful("stateful_verified_km.txt");
+                int last_revision = stoi(last_revision_str);
+                int all_km = stoi(stateful("stateful_current_km.txt"));
+
+                if(all_km - last_revision >= 10000){
+                    return "Time for revision!";
+                }
+                else { return "Keep rolling!";}
+            }
+            else if(name == "senzor") {
+                distance.value = stateful("stateful_senzor.txt");
+                string brake = "false";
+                if(stoi(distance.value) < 3){
+                    brake = "true";
+                }
+                return brake;
+                }
             else{
-                return "";
+            return "";
             }
         }
 
@@ -186,8 +228,8 @@ private:
         struct intSetting{
         
             std::string name;
-            string value = stateful("stateful.txt");
-        }temperature;
+            string value;
+        }temperature, distance;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
