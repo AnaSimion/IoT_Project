@@ -235,6 +235,12 @@ private:
                 stateful2(std::to_string(rand()%35), "stateful_weather.txt");
                 return 1;
             }
+            if(name == "music"){
+                music.name = name;
+                music.value = value;
+                stateful2(value, "stateful_music.txt");
+                return 1;
+            }
             return 0;
         }
 
@@ -272,6 +278,10 @@ private:
             }
             else if (name == "weather"){
                 weather.value = stateful("stateful_weather.txt");
+                return weather.value;
+            }
+            else if (name == "music"){
+                weather.value = stateful("stateful_music.txt");
                 return weather.value;
             }
             else{
@@ -312,7 +322,7 @@ private:
         
             std::string name;
             string value;
-        }temperature, distance, weather;
+        }temperature, distance, weather, music;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
