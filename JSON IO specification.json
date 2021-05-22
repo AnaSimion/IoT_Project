@@ -1,0 +1,132 @@
+{
+    "device-name": "Car App",
+    "device-type": "Car",
+    "buffers-count": 2,
+    "input-buffers":{
+        "settings":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -XPOST 'http://127.0.0.1:8080/'",
+            "buffer-tokens":[
+            {
+                "name":"temperature",
+                "description":"set the temperature in the car",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "^0|[1-9][0-9]*", 
+                "optional": false
+            },
+            {
+                "name":"weather",
+                "description": "we set the name of the city that we want to show weather for on infotainment",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", 
+                "optional": false
+            },
+            {
+                "name":"music",
+                "description": "name of the song we wanna play",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*",
+                "optional": false
+            }
+            ]
+        },
+        "sensors":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -XPOST 'http://127.0.0.1:8080/'",
+            "buffer-tokens":[
+            {
+                "name":"oprire",
+                "description":"updates the number of kilometers after each trip",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "^0|[1-9][0-9]*", 
+                "optional": false
+            },
+            {
+                "name":"revision_done",
+                "description": "updates each time revision is done (reset of revision km)",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "^0|[1-9][0-9]*",
+                "optional": false
+            },
+            {
+                "name":"proximitate",
+                "description": "distance to obstacle",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "^0|[1-9][0-9]*", 
+                "optional": false
+            }
+            ]
+        }
+        
+    },
+    "output-buffers":{
+    
+        "settings":{
+        "token-delimitators": "",
+        "protocol": "HTTP",
+        "prefix": "curl -XGET 'http://127.0.0.1:8080/'",
+        "buffer-tokens":[
+        {
+            "name":"temperature",
+            "description":"temperature in the car at the moment",
+            "token-type":"string", 
+            "byte-size":10, 
+            "regex-rule": "[a-zA-Z]*", 
+            "optional": true
+        },
+        {
+            "name":"weather",
+            "description": "weather in the specifiend town",
+            "token-type":"string",
+            "byte-size":10,
+            "regex-rule": "[a-zA-Z]*", 
+            "optional": true
+        },
+        {
+            "name":"music",
+            "description": "the song that is playing",
+            "token-type":"string",
+            "byte-size":10,
+            "regex-rule": "[a-zA-Z]*", 
+            "optional": true
+        }
+        
+        ]
+    },
+    
+        "sensors":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -XGET 'http://127.0.0.1:8080/'",
+            "buffer-tokens":[
+            {
+                "name":"revision",
+                "description":"do or do not need to go to revision",
+                "token-type":"string", 
+                "byte-size":10, 
+                "regex-rule": "[a-zA-Z]*", 
+                "optional": true
+            },
+            {
+                "name":"proximitate",
+                "description": "back sensors help us park the car",
+                "token-type":"string",
+                "byte-size":10,
+                "regex-rule": "[a-zA-Z]*", 
+                "optional": true
+            }
+            ]
+        }
+    }
+}
+
+
+
