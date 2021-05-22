@@ -89,8 +89,13 @@ private:
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Get(router, "/auth", Routes::bind(&CarEndpoint::doAuth, this));
+
         Routes::Post(router, "/settings/:settingName/:value?", Routes::bind(&CarEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&CarEndpoint::getSetting, this));
+        Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CarEndpoint::getSetting2, this));
+        Routes::Post(router, "/sensors/:sensorName/:value?", Routes::bind(&CarEndpoint::setSetting2, this));
+
+
     }
 
     
@@ -133,6 +138,35 @@ private:
 
     }
 
+        // Endpoint to configure one of the Car's sensors.
+    void setSetting2(const Rest::Request& request, Http::ResponseWriter response){
+        // You don't know what the parameter content that you receive is, but you should
+        // try to cast it to some data structure. Here, I cast the settingName to string.
+        auto sensorName = request.param(":sensorName").as<std::string>();
+
+        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(carLock);
+
+        
+        string val = "";
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+        // Setting the car's setting to value
+        int setResponse = v_car.set2(sensorName, val);
+
+        // Sending some confirmation or error response.
+        if (setResponse == 1) {
+            response.send(Http::Code::Ok, sensorName + " was set to " + val);
+        }
+        else {
+            response.send(Http::Code::Not_Found, sensorName + " was not found and or '" + val + "' was not a valid value ");
+        }
+
+    }
+
     // Setting to get the settings value of one of the configurations of the Car
     void getSetting(const Rest::Request& request, Http::ResponseWriter response){
         auto settingName = request.param(":settingName").as<std::string>();
@@ -155,6 +189,28 @@ private:
         }
     }
 
+        // Setting to get the settings value of one of the configurations of the Car
+    void getSetting2(const Rest::Request& request, Http::ResponseWriter response){
+        auto sensorName = request.param(":sensorName").as<std::string>();
+
+        Guard guard(carLock);
+        string valueSetting = v_car.get2(sensorName);
+
+        if (valueSetting != "") {
+
+            // In this response I also add a couple of headers, describing the server that sent this response, and the way the content is formatted.
+            using namespace Http;
+            response.headers()
+                        .add<Header::Server>("pistache/0.1")
+                        .add<Header::ContentType>(MIME(Text, Plain));
+
+            response.send(Http::Code::Ok, sensorName + " is " + valueSetting);
+        }
+        else {
+            response.send(Http::Code::Not_Found, sensorName + " was not found");
+        }
+    }
+
     // Defining the class of the Car. It should model the entire configuration of the Car
     class Car {
     public:
@@ -168,6 +224,11 @@ private:
                 stateful2(value, "stateful.txt");
                 return 1;
             }
+            return 0;
+        }
+
+        // Setting the value for one of the sensors.
+        int set2(std::string name, std::string value){
             if (name == "oprire"){
                 //oprire.value = value;
                 std::string all_km_str = stateful("stateful_current.txt");
@@ -184,7 +245,7 @@ private:
                 stateful2(last_revision , "stateful_verified_km.txt");
                 return 1;
             }
-            if(name == "senzor") {
+            if(name == "proximitate") {
               distance.value = value;
               stateful2(value, "stateful_senzor.txt");
               return 1;
@@ -192,13 +253,20 @@ private:
             return 0;
         }
 
-        // Getter
+        // Getter settings
         string get(std::string name){
             if (name == "temperature"){
                 temperature.value = stateful("stateful.txt");
                 return temperature.value;
             }
-            else if (name == "revision"){
+            else{
+            return "";
+            }
+        }
+
+        // Getter sensors
+        string get2(std::string name){
+            if (name == "revision"){
                 std::string last_revision_str = stateful("stateful_verified_km.txt");
                 int last_revision = stoi(last_revision_str);
                 int all_km = stoi(stateful("stateful_current_km.txt"));
@@ -208,7 +276,7 @@ private:
                 }
                 else { return "Keep rolling!";}
             }
-            else if(name == "senzor") {
+            else if(name == "proximitate") {
                 distance.value = stateful("stateful_senzor.txt");
                 string brake = "false";
                 if(stoi(distance.value) < 3){
