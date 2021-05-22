@@ -13,6 +13,7 @@
 
 #include <signal.h>
 #include <string.h>
+#include <mqtt/client.h>
 
 
 using namespace std;
@@ -219,9 +220,19 @@ private:
         // Setting the value for one of the settings.
         int set(std::string name, std::string value){
             if(name == "temperature"){
-                temperature.name = name;
-                temperature.value = value;
-                stateful2(value, "stateful.txt");
+                string aux = stateful("stateful_weather.txt");
+                if(abs(stoi(aux) - stoi(value)) <= 10){
+                    temperature.name = name;
+                    temperature.value = value;
+                    stateful2(value, "stateful.txt");
+                    return 1;
+                }
+                else return 0;
+            }
+            if(name == "weather"){
+                weather.name = name;
+                weather.value = value;
+                stateful2(std::to_string(rand()%35), "stateful_weather.txt");
                 return 1;
             }
             return 0;
@@ -258,6 +269,10 @@ private:
             if (name == "temperature"){
                 temperature.value = stateful("stateful.txt");
                 return temperature.value;
+            }
+            else if (name == "weather"){
+                weather.value = stateful("stateful_weather.txt");
+                return weather.value;
             }
             else{
             return "";
@@ -297,7 +312,7 @@ private:
         
             std::string name;
             string value;
-        }temperature, distance;
+        }temperature, distance, weather;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
@@ -313,8 +328,40 @@ private:
     Rest::Router router;
 };
 
+void mqttExample() {
+    const std::string address = "localhost";
+    const std::string clientId = "car";
+
+    // Create a client
+    mqtt::client client(address, clientId);
+
+    mqtt::connect_options options;
+    options.set_keep_alive_interval(20);
+    options.set_clean_session(true);
+
+    try {
+        // Connect to the client
+        client.connect(options);
+
+        // Create a message
+        const std::string TOPIC = "car";
+        const std::string PAYLOAD = "Vroom, Vroom! Car is running";
+        auto msg = mqtt::make_message(TOPIC, PAYLOAD);
+
+        // Publish it to the server
+        client.publish(msg);
+
+        // Disconnect
+        client.disconnect();
+    }
+    catch (const mqtt::exception& exc) {
+        std::cerr << exc.what() << " [" << exc.get_reason_code() << "]" << std::endl;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
+    mqttExample();
 
     // This code is needed for gracefull shutdown of the server when no longer needed.
     sigset_t signals;
