@@ -41,3 +41,5 @@ http://localhost:9080/settings/temperature
 
 Set:
 http://localhost:9080/sensorName/revision_done/25000
+
+We also use Postman for route navigation: https://www.postman.com/
